@@ -79,8 +79,7 @@ func collate() {
 
 	// Each fragment ends with a comma, so write an empty record to make
 	// the compilation database valid JSON.
-	compdb.Write([]byte(`{"file":"","directory":"","arguments":[]}\n`)) //nolint:errcheck
-	compdb.Write([]byte("}\n]"))                                        //nolint:errcheck
+	compdb.Write([]byte(`{"file":"","directory":"","arguments":[]}]`)) //nolint:errcheck
 
 	compdb.Sync()  //nolint:errcheck
 	compdb.Close() //nolint:errcheck
