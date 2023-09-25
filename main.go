@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -85,6 +86,22 @@ func collate() {
 	compdb.Close() //nolint:errcheck
 }
 
+// subdirCompdbPath generates an output path to place the compilation
+// DB fragment for objectPath, which is the output path for a .o file.
+// The fragment is placed in a new ".mj" directory in the same directory
+// as the object path.
+func subdirCompdbPath(objectPath string) string {
+	file := strings.TrimSuffix(path.Base(objectPath), ".o") + ".db.json"
+	dir := path.Join(path.Dir(objectPath), ".mj")
+
+	if err := os.Mkdir(dir, 0755); err != nil && !os.IsExist(err) {
+		fmt.Fprintf(os.Stderr, "mj: %s\n", err)
+		os.Exit(int(EX_CANTCREAT))
+	}
+
+	return path.Join(dir, file)
+}
+
 func compile(argv ...string) {
 	// Scan for the output option. We only want to inject the "-MJ" if
 	// this compilation job is building some source to an object file.
@@ -102,7 +119,7 @@ func compile(argv ...string) {
 
 			if strings.HasSuffix(objectPath, ".o") {
 				argv = slices.Insert(argv, 1,
-					"-MJ", strings.TrimSuffix(objectPath, ".o")+".db.json",
+					"-MJ", subdirCompdbPath(objectPath),
 				)
 			}
 
